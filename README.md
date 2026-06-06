@@ -14,22 +14,6 @@ untrusted data. A page disguised as an ordinary article was able to direct
 the agent to take a chain of actions outside the user's intent, including
 data disclosure and an unsolicited wallet-transaction prompt.
 
-## Severity
-
-Proposed: **High / Critical**
-Candidate CVSS v3.1 vector (to be confirmed):
-`CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:N`
-User interaction is required (the victim must invoke summarization on the
-attacker's page), but no privileges are needed and impact crosses the
-browser boundary to the host and connected wallets.
-
-## Affected
-
-- Product: Brave Browser — Leo AI assistant
-- Affected version(s): [BRAVE / LEO VERSION AT REPORT TIME]
-- Platform(s): [DESKTOP / OS TESTED]
-- Status: Fixed by Brave (see Disclosure Timeline)
-
 ## Background
 
 Leo is Brave's built-in AI assistant. A common workflow is "summarize this
@@ -50,57 +34,12 @@ Once the agent followed page-supplied instructions, the proof of concept
 demonstrated the following without user authorization:
 
 - A file fetched/downloaded without user consent (evidence: `proof.txt`)
-- Recovery of the host's local IP address via WebRTC, bypassing VPN masking
-- Enumeration of hosts on the local network
 - Registration of a persistent service worker that survives tab closure
 - An unsolicited cryptocurrency transaction prompt
 - Exfiltration of collected data to an external endpoint
 
 The presence of these outcomes in a privacy-focused browser materially
 raises the severity.
-
-## Proof of Concept
-
-[FIGURE 1: screen recording/screenshot of Leo executing the injected
-instructions during summarization]
-
-Reproduction (against the affected version):
-
-1. Host the included pages (e.g., via GitHub Pages or any static host).
-2. In the affected Brave build, open `index.html` (a decoy article).
-3. Invoke Leo's "summarize this page" on the article.
-4. Observe the agent following the page-embedded instructions.
-
-Files in this repository correspond to individual stages and variants of
-the chain (the decoy article, the payload, the persistence worker, and
-several interaction-trap variants). See file headers for details.
-
-## Disclosure Timeline
-
-- [YYYY-MM-DD] — Reported to Brave
-- [YYYY-MM-DD] — Acknowledged / triaged by Brave
-- [YYYY-MM-DD] — Fix released in [VERSION]
-- [YYYY-MM-DD] — Public writeup
-
-## Remediation
-
-Brave addressed the issue in [VERSION]. General guidance for agentic-AI
-implementations:
-
-- Treat all page/tool content as untrusted data; never as instructions.
-- Enforce a strict instruction/data separation at the prompt boundary.
-- Require explicit, scoped user confirmation for sensitive agent actions
-  (downloads, network requests, wallet interactions).
-- Constrain agent capabilities (no implicit access to wallets, local
-  network, or persistence primitives).
-
-## References
-
-- Vendor advisory / CVE / report: [LINK OR ID, IF AVAILABLE]
-
-## Author
-
-[YOUR NAME OR HANDLE] — [OPTIONAL CONTACT]
 
 ## Disclaimer
 
