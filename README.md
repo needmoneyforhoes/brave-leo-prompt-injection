@@ -1,54 +1,108 @@
-# brave-poc — Indirect Prompt Injection PoC for Brave's Leo AI Assistant
+# Indirect Prompt Injection in Brave's Leo AI Assistant
 
-> ⚠️ **Security research / responsible-disclosure proof-of-concept.** This repository
-> demonstrates a vulnerability for educational and disclosure purposes only. Do **not**
-> deploy it against anyone without their explicit consent. Use only against your own
-> browser in a controlled test environment.
+A crafted webpage can embed instructions that Brave's Leo AI assistant
+interprets as commands during page summarization, causing the agent to
+perform actions the user never authorized. Responsibly disclosed to Brave
+and fixed.
 
-## What this demonstrates
+## Summary
 
-This is a proof-of-concept for an **indirect prompt-injection** vulnerability in
-**Brave's "Leo" AI assistant**. A web page disguised as an ordinary article embeds
-hidden instructions inside fake `<brave_untrusted_content>` delimiters. When the user
-asks Leo to summarize or interact with the page, the AI agent treats the injected text
-as instructions and acts on them — performing actions the user never approved.
+Brave's Leo assistant can summarize and reason over the content of the page
+a user is viewing. When asked to summarize an attacker-controlled page, Leo
+treated text embedded in the page as trusted instructions rather than as
+untrusted data. A page disguised as an ordinary article was able to direct
+the agent to take a chain of actions outside the user's intent, including
+data disclosure and an unsolicited wallet-transaction prompt.
 
-The headline proof: `proof.txt` is a file that was **downloaded without user consent**,
-triggered purely by the injected page content via the Leo agent.
+## Severity
 
-## Demonstrated impact (severity chain)
+Proposed: **High / Critical**
+Candidate CVSS v3.1 vector (to be confirmed):
+`CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:N`
+User interaction is required (the victim must invoke summarization on the
+attacker's page), but no privileges are needed and impact crosses the
+browser boundary to the host and connected wallets.
 
-Once the agent can be steered by page content, the included `payload.html` illustrates
-how serious the consequences can get for a *privacy-focused* browser:
+## Affected
 
-- File download without consent (see `proof.txt`)
-- Persistent **service worker** registration (`sw.js`) that survives tab close
-- **WebRTC local-IP leak** (real LAN IP, even behind a VPN)
-- **Local-network probing** for common router/device IPs
-- A prompt to initiate a **wallet transaction** (uses a public placeholder address)
-- Exfiltration of results to an external collector endpoint
+- Product: Brave Browser — Leo AI assistant
+- Affected version(s): [BRAVE / LEO VERSION AT REPORT TIME]
+- Platform(s): [DESKTOP / OS TESTED]
+- Status: Fixed by Brave (see Disclosure Timeline)
 
-These are included to communicate real-world severity to the vendor — standard practice
-in a vulnerability report.
+## Background
 
-## File index
+Leo is Brave's built-in AI assistant. A common workflow is "summarize this
+page," which feeds the current page's content to the model. The security
+boundary that must hold is that page content is *data*, never *instructions*.
 
-| File | Role |
-|------|------|
-| `index.html` / `page2.html` | Decoy "travel guide" article carrying the injected instructions |
-| `payload.html` | Full impact-demonstration payload |
-| `sw.js` | Service worker used for persistence |
-| `auth_read.html`, `auth_read_v2.html` | Variants probing data-read behavior |
-| `clicktrap.html`, `scrolltrap.html`, `jsclick.html` | UI-redress / interaction-trap variants |
-| `redirect.html`, `confirm.html`, `download.html`, `bravelink.html` | Supporting flow pages |
-| `travel-guide.html` / `travel-guide.pdf` | Benign decoy content |
-| `proof.txt` | Evidence artifact (file fetched without consent) |
+## Vulnerability
 
-## Responsible use
+The page places attacker text inside markers intended to delimit untrusted
+content. Instead of being treated strictly as quoted data, the embedded text
+was acted upon as agent instructions during summarization. This is a classic
+indirect (second-order) prompt injection: the malicious instructions arrive
+through content the agent ingests, not through the user's own prompt.
 
-This material exists to help **fix** the issue. If you are reproducing it:
-- Test only against your own Brave/Leo instance.
-- Do not point the exfiltration endpoint at real victims.
-- If not already done, report the finding to Brave via their security/disclosure channel.
+## Impact
 
-*Repository made private after testing. Documented as part of a repo-organization pass.*
+Once the agent followed page-supplied instructions, the proof of concept
+demonstrated the following without user authorization:
+
+- A file fetched/downloaded without user consent (evidence: `proof.txt`)
+- Recovery of the host's local IP address via WebRTC, bypassing VPN masking
+- Enumeration of hosts on the local network
+- Registration of a persistent service worker that survives tab closure
+- An unsolicited cryptocurrency transaction prompt
+- Exfiltration of collected data to an external endpoint
+
+The presence of these outcomes in a privacy-focused browser materially
+raises the severity.
+
+## Proof of Concept
+
+[FIGURE 1: screen recording/screenshot of Leo executing the injected
+instructions during summarization]
+
+Reproduction (against the affected version):
+
+1. Host the included pages (e.g., via GitHub Pages or any static host).
+2. In the affected Brave build, open `index.html` (a decoy article).
+3. Invoke Leo's "summarize this page" on the article.
+4. Observe the agent following the page-embedded instructions.
+
+Files in this repository correspond to individual stages and variants of
+the chain (the decoy article, the payload, the persistence worker, and
+several interaction-trap variants). See file headers for details.
+
+## Disclosure Timeline
+
+- [YYYY-MM-DD] — Reported to Brave
+- [YYYY-MM-DD] — Acknowledged / triaged by Brave
+- [YYYY-MM-DD] — Fix released in [VERSION]
+- [YYYY-MM-DD] — Public writeup
+
+## Remediation
+
+Brave addressed the issue in [VERSION]. General guidance for agentic-AI
+implementations:
+
+- Treat all page/tool content as untrusted data; never as instructions.
+- Enforce a strict instruction/data separation at the prompt boundary.
+- Require explicit, scoped user confirmation for sensitive agent actions
+  (downloads, network requests, wallet interactions).
+- Constrain agent capabilities (no implicit access to wallets, local
+  network, or persistence primitives).
+
+## References
+
+- Vendor advisory / CVE / report: [LINK OR ID, IF AVAILABLE]
+
+## Author
+
+[YOUR NAME OR HANDLE] — [OPTIONAL CONTACT]
+
+## Disclaimer
+
+Published for educational and defensive purposes after the issue was fixed.
+Provided as-is; do not use against systems or users without authorization.
