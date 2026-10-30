@@ -45,3 +45,8 @@ raises the severity.
 
 Published for educational and defensive purposes after the issue was fixed.
 Provided as-is; do not use against systems or users without authorization.
+
+## Feedback
+
+Suggestions, improvements, or something not working? Please
+[open an issue](https://github.com/needmoneyforhoes/brave-leo-prompt-injection/issues/new). Pull requests are welcome too.
